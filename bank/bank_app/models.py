@@ -1,3 +1,4 @@
+# bank_app/models.py
 from django.db import models
 
 ACCOUNT_CHOICES = [
@@ -16,7 +17,8 @@ class BankApplication(models.Model):
     last_name = models.CharField(max_length=50)
     email = models.EmailField()
     mobile_number = models.CharField(max_length=15)
-    address_line1 = models.CharField(max_length=100)
+    alternate_mobile_number = models.CharField(max_length=15, blank=True, null=True)
+    address_line = models.CharField(max_length=100)
     city = models.CharField(max_length=50)
     state = models.CharField(max_length=50)
     pincode = models.CharField(max_length=10)
@@ -26,6 +28,7 @@ class BankApplication(models.Model):
     nominee_name = models.CharField(max_length=50)
     nomination_relation = models.CharField(max_length=50)
     nominee_dob = models.DateField()
+    # nominee_contact REMOVED
     pan_number = models.CharField(max_length=10)
     aadhaar_number = models.CharField(max_length=12)
     voter_id = models.CharField(max_length=15, blank=True, null=True)
@@ -33,8 +36,9 @@ class BankApplication(models.Model):
     
     # File uploads
     pan_card_image = models.FileField(upload_to='documents/')
-    aadhaar_front_image = models.FileField(upload_to='documents/')
+    aadhaar_card = models.FileField(upload_to='documents/')  # CHANGED from aadhaar_front_image
     passport_photo = models.ImageField(upload_to='photos/')
+    signature = models.ImageField(upload_to='signatures/', blank=True, null=True)
     
     agree_terms = models.BooleanField(default=False)
     submitted_at = models.DateTimeField(auto_now_add=True)

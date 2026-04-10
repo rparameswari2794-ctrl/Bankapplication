@@ -57,7 +57,6 @@
         .detail-value {
             width: 65%;
             color: #212529;
-            font-family: monospace;
         }
         .masked-number {
             font-family: monospace;
@@ -74,6 +73,10 @@
             text-decoration: none;
             font-size: 0.9rem;
         }
+        .download-link:hover {
+            color: white;
+            opacity: 0.9;
+        }
         .btn-home {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
@@ -81,6 +84,15 @@
             margin-top: 20px;
             width: 100%;
             font-weight: 600;
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            border-radius: 8px;
+        }
+        .btn-home:hover {
+            color: white;
+            opacity: 0.9;
         }
         .application-id {
             font-family: monospace;
@@ -96,10 +108,27 @@
         }
         .print-btn {
             background: #6c757d;
+            border: none;
+            padding: 12px 30px;
+            margin-top: 20px;
             margin-right: 10px;
+            font-weight: 600;
+            border-radius: 8px;
         }
         .print-btn:hover {
             background: #5a6268;
+        }
+        .btn-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn-container .btn-home {
+            margin-top: 0;
+            flex: 1;
+        }
+        .btn-container .print-btn {
+            margin-top: 0;
         }
     </style>
 </head>
@@ -134,13 +163,15 @@
                     <div class="detail-label">Primary Mobile:</div>
                     <div class="detail-value masked-number">{{ app.mobile_number|slice:":2" }}******{{ app.mobile_number|slice:"-2:" }}</div>
                 </div>
+                {% if app.alternate_mobile_number %}
                 <div class="detail-row">
                     <div class="detail-label">Alternate Mobile:</div>
-                    <div class="detail-value masked-number">{{ app.alternate_mobile_number|slice:":2" }}**********{{ app.alternate_mobile_number|slice:"-2:" }}</div>
+                    <div class="detail-value masked-number">{{ app.alternate_mobile_number|slice:":2" }}******{{ app.alternate_mobile_number|slice:"-2:" }}</div>
                 </div>
+                {% endif %}
                 <div class="detail-row">
                     <div class="detail-label">Address:</div>
-                    <div class="detail-value">{{ app.address_line1 }}, {{ app.city }}, {{ app.state }} - {{ app.pincode }}</div>
+                    <div class="detail-value">{{ app.address_line }}, {{ app.city }}, {{ app.state }} - {{ app.pincode }}</div>
                 </div>
             </div>
 
@@ -216,10 +247,10 @@
                     <div class="detail-value"><a href="{{ app.pan_card_image.url }}" class="download-link" download><i class="fas fa-file-pdf"></i> Download PDF</a></div>
                 </div>
                 {% endif %}
-                {% if app.aadhaar_front_image %}
+                {% if app.aadhaar_card %}
                 <div class="detail-row">
                     <div class="detail-label">Aadhaar Card:</div>
-                    <div class="detail-value"><a href="{{ app.aadhaar_front_image.url }}" class="download-link" download><i class="fas fa-file-pdf"></i> Download PDF</a></div>
+                    <div class="detail-value"><a href="{{ app.aadhaar_card.url }}" class="download-link" download><i class="fas fa-file-pdf"></i> Download PDF</a></div>
                 </div>
                 {% endif %}
                 <div class="detail-row">
@@ -229,6 +260,7 @@
                         <br><a href="{{ app.passport_photo.url }}" class="download-link mt-2" download><i class="fas fa-download"></i> Download Image</a>
                     </div>
                 </div>
+                {% if app.signature %}
                 <div class="detail-row">
                     <div class="detail-label">Signature:</div>
                     <div class="detail-value">
@@ -236,6 +268,7 @@
                         <br><a href="{{ app.signature.url }}" class="download-link mt-2" download><i class="fas fa-download"></i> Download Signature</a>
                     </div>
                 </div>
+                {% endif %}
             </div>
 
             <!-- Next Steps -->
@@ -250,11 +283,11 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="d-flex gap-2 mt-3">
-                <button onclick="window.print()" class="btn btn-secondary print-btn">
+            <div class="btn-container">
+                <button onclick="window.print()" class="print-btn">
                     <i class="fas fa-print me-2"></i>Print Summary
                 </button>
-                <a href="/" class="btn btn-home text-white">
+                <a href="/" class="btn-home">
                     <i class="fas fa-home me-2"></i>Back to Home
                 </a>
             </div>

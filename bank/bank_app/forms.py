@@ -10,5 +10,5 @@ class BankApplicationForm(forms.ModelForm):
         fields = '__all__'
         widgets = {
             'nominee_dob': forms.DateInput(attrs={'type': 'date'}),
-            'address_line1': forms.Textarea(attrs={'rows': 2}),
+            'address_line': forms.Textarea(attrs={'rows': 2}),
         }

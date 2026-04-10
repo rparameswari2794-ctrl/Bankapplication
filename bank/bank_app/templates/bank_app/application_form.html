@@ -109,21 +109,11 @@
             background: #fff3cd;
             color: #856404;
         }
-        .ai-message.duplicate {
-            background: #f8d7da;
-            color: #721c24;
-            border-left: 4px solid #dc3545;
-            font-weight: bold;
-        }
         .field-valid {
             border-color: #28a745 !important;
         }
         .field-invalid {
             border-color: #dc3545 !important;
-        }
-        .field-duplicate {
-            border-color: #ff6b6b !important;
-            background-color: #fff5f5 !important;
         }
         .id-checkbox {
             margin-right: 10px;
@@ -156,7 +146,7 @@
         <div class="form-card">
             <h2 class="text-center mb-4">
                 <i class="fas fa-university me-2"></i>Bank Account Opening Form
-                <br><small class="text-muted">AI-Powered Smart Assistant with Duplicate Prevention</small>
+                <br><small class="text-muted">AI-Powered Smart Assistant</small>
             </h2>
 
             <div class="ai-panel" onclick="toggleChatBody()">
@@ -165,14 +155,7 @@
                 <i class="fas fa-chevron-down float-end"></i>
             </div>
 
-            <!-- Duplicate Alert Banner -->
-            <div id="duplicateAlert" class="duplicate-alert">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <strong>⚠️ Duplicate Application Detected!</strong>
-                <p id="duplicateMessage" class="mb-0 mt-2"></p>
-            </div>
-
-            <form id="bankForm" method="POST" action="/success/" enctype="multipart/form-data">
+            <form id="bankForm" method="POST" action="/" enctype="multipart/form-data">
                 {% csrf_token %}
                 
                 <!-- Personal Information -->
@@ -184,13 +167,13 @@
                     <div class="col-md-6">
                         <label class="form-label required-star">First Name</label>
                         <input type="text" class="form-control" id="firstName" name="first_name" 
-                               oninput="validateAndSuggest(this, 'first_name'); checkDuplicateSubmission();" required>
+                               oninput="validateAndSuggest(this, 'first_name');" required>
                         <div class="ai-suggestions" id="suggest-first_name"></div>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label required-star">Last Name</label>
                         <input type="text" class="form-control" id="lastName" name="last_name"
-                               oninput="validateAndSuggest(this, 'last_name'); checkDuplicateSubmission();" required>
+                               oninput="validateAndSuggest(this, 'last_name');" required>
                         <div class="ai-suggestions" id="suggest-last_name"></div>
                     </div>
                 </div>
@@ -198,27 +181,27 @@
                 <div class="mb-3">
                     <label class="form-label required-star">Email Address</label>
                     <input type="email" class="form-control" id="email" name="email"
-                           oninput="validateAndSuggest(this, 'email'); checkDuplicateSubmission();" required>
+                           oninput="validateAndSuggest(this, 'email');" required>
                     <div class="ai-suggestions" id="suggest-email"></div>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label required-star">Primary Mobile Number</label>
                     <input type="tel" class="form-control" id="mobile" name="mobile_number"
-                           pattern="[0-9]{10}" oninput="validateAndSuggest(this, 'mobile'); validateAlternateMobile(); checkDuplicateSubmission();" required>
+                           pattern="[0-9]{10}" oninput="validateAndSuggest(this, 'mobile'); validateAlternateMobile();" required>
                     <div class="ai-suggestions" id="suggest-mobile"></div>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label required-star">Alternate Mobile Number</label>
                     <input type="tel" class="form-control" id="alternate_mobile" name="alternate_mobile_number"
-                           pattern="[0-9]{10}" oninput="validateAlternateMobile(); checkDuplicateSubmission();" required>
+                           pattern="[0-9]{10}" oninput="validateAlternateMobile();" required>
                     <div class="ai-suggestions" id="suggest-alternate_mobile"></div>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label required-star">Address Line 1</label>
-                    <textarea class="form-control" id="address_line1" name="address_line1" rows="2" required></textarea>
+                    <label class="form-label required-star">Address Line</label>
+                    <textarea class="form-control" id="address_line" name="address_line" rows="2" required></textarea>
                     <div class="ai-suggestions" id="suggest-address"></div>
                 </div>
 
@@ -285,10 +268,6 @@
                         <label class="form-label required-star">Nominee Date of Birth</label>
                         <input type="date" class="form-control" id="nominee_dob" name="nominee_dob" required>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Nominee Contact (Optional)</label>
-                        <input type="text" class="form-control" id="nomineePhone" name="nominee_contact">
-                    </div>
                 </div>
 
                 <!-- ID Proofs - Any 2 of 4 -->
@@ -343,7 +322,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Aadhaar Card (PDF)</label>
-                                <input type="file" class="form-control" name="aadhaar_front_image" accept="application/pdf" onchange="validateFile(this, 'aadhaar')">
+                                <input type="file" class="form-control" name="aadhaar_card" accept="application/pdf" onchange="validateFile(this, 'aadhaar')">
                             </div>
                         </div>
                     </div>
@@ -434,17 +413,11 @@
         </div>
         <div class="floating-ai-body" id="chatBody">
             <div class="ai-message success">🤖 AI Assistant Active! I will validate each field in real-time.</div>
-            <div class="ai-message success">🔍 AI will also check for duplicate submissions automatically!</div>
             <div class="ai-message">💡 Start filling the form - I'll guide you through each field!</div>
         </div>
     </div>
 
     <script>
-        let fieldValidationStatus = {};
-        let isDuplicate = false;
-        let existingApplicationId = null;
-        let duplicateCheckTimeout = null;
-
         function addAIMessage(message, type = 'info') {
             const chatBody = document.getElementById('chatBody');
             const msgDiv = document.createElement('div');
@@ -453,107 +426,6 @@
             chatBody.appendChild(msgDiv);
             chatBody.scrollTop = chatBody.scrollHeight;
             while(chatBody.children.length > 25) chatBody.removeChild(chatBody.children[0]);
-        }
-
-        // AI Duplicate Submission Check
-        async function checkDuplicateSubmission() {
-            const firstName = document.getElementById('firstName').value;
-            const lastName = document.getElementById('lastName').value;
-            const email = document.getElementById('email').value;
-            const mobile = document.getElementById('mobile').value;
-            const alternateMobile = document.getElementById('alternate_mobile').value;
-            
-            // Only check if at least name and email or mobile are filled
-            if ((!firstName || !lastName) && !email && !mobile) {
-                return;
-            }
-            
-            const checkingStatus = document.getElementById('checkingStatus');
-            checkingStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> AI checking for duplicate submissions...';
-            
-            // Debounce to avoid too many API calls
-            clearTimeout(duplicateCheckTimeout);
-            duplicateCheckTimeout = setTimeout(async () => {
-                try {
-                    // Prepare data for duplicate check
-                    const checkData = {
-                        first_name: firstName,
-                        last_name: lastName,
-                        email: email,
-                        mobile_number: mobile,
-                        alternate_mobile_number: alternateMobile
-                    };
-                    
-                    // Make API call to check duplicates (mock API - replace with your actual endpoint)
-                    // For demo, we'll simulate checking against localStorage or session
-                    const existingApps = JSON.parse(localStorage.getItem('submittedApplications') || '[]');
-                    
-                    const duplicate = existingApps.find(app => 
-                        (app.first_name?.toLowerCase() === firstName?.toLowerCase() && 
-                         app.last_name?.toLowerCase() === lastName?.toLowerCase()) ||
-                        app.email?.toLowerCase() === email?.toLowerCase() ||
-                        app.mobile_number === mobile
-                    );
-                    
-                    if (duplicate) {
-                        isDuplicate = true;
-                        existingApplicationId = duplicate.id;
-                        const duplicateAlert = document.getElementById('duplicateAlert');
-                        const duplicateMessage = document.getElementById('duplicateMessage');
-                        
-                        duplicateAlert.style.display = 'block';
-                        duplicateMessage.innerHTML = `
-                            <strong>We found an existing application!</strong><br>
-                            Name: ${duplicate.first_name} ${duplicate.last_name}<br>
-                            Email: ${duplicate.email}<br>
-                            Mobile: ${duplicate.mobile_number}<br>
-                            Submitted on: ${new Date(duplicate.submitted_at).toLocaleString()}<br><br>
-                            Please check your details. If this is not you, please contact support.
-                        `;
-                        
-                        // Highlight duplicate fields
-                        const fieldsToHighlight = ['firstName', 'lastName', 'email', 'mobile'];
-                        fieldsToHighlight.forEach(fieldId => {
-                            const field = document.getElementById(fieldId);
-                            if (field) field.classList.add('field-duplicate');
-                        });
-                        
-                        addAIMessage(`⚠️ DUPLICATE DETECTED! An application with similar details was submitted on ${new Date(duplicate.submitted_at).toLocaleDateString()}. Please verify your information.`, 'duplicate');
-                        checkingStatus.innerHTML = '<span class="text-danger">⚠️ Duplicate application detected!</span>';
-                        
-                        // Disable submit button
-                        document.getElementById('submitBtn').disabled = true;
-                    } else {
-                        isDuplicate = false;
-                        existingApplicationId = null;
-                        document.getElementById('duplicateAlert').style.display = 'none';
-                        
-                        // Remove duplicate highlighting
-                        const fieldsToHighlight = ['firstName', 'lastName', 'email', 'mobile'];
-                        fieldsToHighlight.forEach(fieldId => {
-                            const field = document.getElementById(fieldId);
-                            if (field) field.classList.remove('field-duplicate');
-                        });
-                        
-                        checkingStatus.innerHTML = '<span class="text-success">✅ No duplicate found. You can submit.</span>';
-                        addAIMessage("✅ AI check complete: No duplicate application found. You can proceed with submission.", 'success');
-                        
-                        // Enable submit button if other validations pass
-                        document.getElementById('submitBtn').disabled = false;
-                    }
-                    
-                    setTimeout(() => {
-                        checkingStatus.innerHTML = '';
-                    }, 3000);
-                    
-                } catch (error) {
-                    console.error('Duplicate check error:', error);
-                    checkingStatus.innerHTML = '<span class="text-warning">⚠️ Unable to check duplicates. Please continue.</span>';
-                    setTimeout(() => {
-                        checkingStatus.innerHTML = '';
-                    }, 3000);
-                }
-            }, 800);
         }
 
         function validateAndSuggest(element, fieldName) {
@@ -626,8 +498,6 @@
                     isValid = value.length > 0;
                     message = isValid ? "✅ Field looks good!" : "❌ This field is required";
             }
-            
-            fieldValidationStatus[fieldName] = isValid;
             
             if (suggestionsDiv && value.length > 0) {
                 if (!isValid) {
@@ -736,7 +606,7 @@
 
         function validateAllFields() {
             let allValid = true;
-            const requiredTextFields = ['firstName', 'lastName', 'email', 'mobile', 'alternate_mobile', 'address_line1', 'city', 'state', 'pincode', 'accountType', 'occupation', 'incomeRange', 'nomineeName', 'nomineeRelation', 'nominee_dob'];
+            const requiredTextFields = ['firstName', 'lastName', 'email', 'mobile', 'alternate_mobile', 'address_line', 'city', 'state', 'pincode', 'accountType', 'occupation', 'incomeRange', 'nomineeName', 'nomineeRelation', 'nominee_dob'];
             
             for (let fieldId of requiredTextFields) {
                 const field = document.getElementById(fieldId);
@@ -764,44 +634,19 @@
                 addAIMessage(`❌ Please select at least 2 ID proofs (currently: ${selectedIDs.length})`, 'error');
             }
             
-            // Check for duplicates
-            if (isDuplicate) {
-                allValid = false;
-                addAIMessage("❌ Duplicate application detected! Please check your details.", 'error');
-            }
-            
             return allValid;
         }
 
-        // Form submission with duplicate prevention
+        // Form submission - validates then allows natural form submission
         document.getElementById('bankForm').addEventListener('submit', function(e) {
-            if (isDuplicate) {
-                e.preventDefault();
-                addAIMessage("❌ Cannot submit duplicate application! Please contact support if this is an error.", 'error');
-                return;
-            }
-            
             if (!validateAllFields()) {
                 e.preventDefault();
                 addAIMessage("❌ Please fix all errors before submitting!", 'error');
-            } else {
-                // Store submission in localStorage for duplicate checking
-                const formData = {
-                    id: Date.now(),
-                    first_name: document.getElementById('firstName').value,
-                    last_name: document.getElementById('lastName').value,
-                    email: document.getElementById('email').value,
-                    mobile_number: document.getElementById('mobile').value,
-                    alternate_mobile_number: document.getElementById('alternate_mobile').value,
-                    submitted_at: new Date().toISOString()
-                };
-                
-                const existingApps = JSON.parse(localStorage.getItem('submittedApplications') || '[]');
-                existingApps.push(formData);
-                localStorage.setItem('submittedApplications', JSON.stringify(existingApps));
-                
-                addAIMessage("✅ All fields validated! Submitting your application...", 'success');
+                return false;
             }
+            
+            addAIMessage("✅ All fields validated! Submitting your application...", 'success');
+            return true;
         });
 
         function toggleChatBody() {
@@ -822,7 +667,6 @@
         // Initial AI welcome message
         setTimeout(() => {
             addAIMessage("🎯 Welcome! I'll validate each field as you type.", 'success');
-            addAIMessage("🔍 AI will automatically check for duplicate submissions!", 'success');
             addAIMessage("📌 Note: Primary and Alternate mobile numbers must be different!", 'warning');
             addAIMessage("🆔 Select any 2 ID proofs from the 4 options below.", 'info');
         }, 500);

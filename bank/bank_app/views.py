@@ -14,7 +14,8 @@ def home(request):
         form = BankApplicationForm(request.POST, request.FILES)
         if form.is_valid():
             app = form.save()
-            return render(request, 'bank_app/success.html', {'app': app})
+            # Redirect to success page
+            return redirect('success')
         else:
             return render(request, 'bank_app/application_form.html', {'form': form})
     else:
@@ -22,15 +23,13 @@ def home(request):
     return render(request, 'bank_app/application_form.html', {'form': form})
 
 def success_page(request):
-    """Success page - handles form submission"""
-    if request.method == 'POST':
-        form = BankApplicationForm(request.POST, request.FILES)
-        if form.is_valid():
-            app = form.save()
-            return render(request, 'bank_app/success.html', {'app': app})
-        else:
-            return render(request, 'bank_app/application_form.html', {'form': form})
-    return redirect('/')
+    """Success page - shows after form submission"""
+    try:
+        # Get the latest application
+        app = BankApplication.objects.latest('id')
+        return render(request, 'bank_app/success.html', {'app': app})
+    except BankApplication.DoesNotExist:
+        return redirect('/')
 
 def ai_suggestion_api(request):
     """AI API for real-time form suggestions"""
@@ -163,7 +162,9 @@ def download_pdf(request, app_id):
         content.append(Paragraph(f"Name: {app.first_name} {app.last_name}", styles['Normal']))
         content.append(Paragraph(f"Email: {app.email}", styles['Normal']))
         content.append(Paragraph(f"Mobile: {app.mobile_number}", styles['Normal']))
-        content.append(Paragraph(f"Address: {app.address_line1}, {app.city}, {app.state} - {app.pincode}", styles['Normal']))
+        if app.alternate_mobile_number:
+            content.append(Paragraph(f"Alternate Mobile: {app.alternate_mobile_number}", styles['Normal']))
+        content.append(Paragraph(f"Address: {app.address_line}, {app.city}, {app.state} - {app.pincode}", styles['Normal']))
         content.append(Spacer(1, 10))
         
         # Account Details
