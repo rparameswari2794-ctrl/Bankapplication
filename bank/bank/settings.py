@@ -24,9 +24,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-(up+m9l!8&g%)m_b%b0f7riroa$w=-)!u2r#^6n(-0e6!8b)qh'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['bankapplication-knhr.onrender.com',
+    '*.onrender.com',
+    'localhost',
+    '127.0.0.1']
 
 
 # Application definition
