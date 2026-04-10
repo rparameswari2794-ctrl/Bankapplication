@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Account Opening Form - AI Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .form-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+        .ai-panel {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+        .section-title {
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .required-star:after {
+            content: "*";
+            color: red;
+            margin-left: 4px;
+        }
+        .ai-suggestions {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 8px;
+            margin-top: 5px;
+            font-size: 0.8rem;
+            border-radius: 5px;
+            display: none;
+        }
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px;
+            font-weight: bold;
+            width: 100%;
+            color: white;
+        }
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .floating-ai {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 380px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        .floating-ai-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px;
+            border-radius: 15px 15px 0 0;
+            cursor: pointer;
+        }
+        .floating-ai-body {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            display: none;
+            background: white;
+            border-radius: 0 0 15px 15px;
+        }
+        .ai-message {
+            background: #e3f2fd;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 10px;
+            font-size: 0.85rem;
+        }
+        .ai-message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .ai-message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .ai-message.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .ai-message.duplicate {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+            font-weight: bold;
+        }
+        .field-valid {
+            border-color: #28a745 !important;
+        }
+        .field-invalid {
+            border-color: #dc3545 !important;
+        }
+        .field-duplicate {
+            border-color: #ff6b6b !important;
+            background-color: #fff5f5 !important;
+        }
+        .id-checkbox {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+        .id-option-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #e9ecef;
+        }
+        .duplicate-alert {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .checking-status {
+            font-size: 0.8rem;
+            margin-top: 5px;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-card">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-university me-2"></i>Bank Account Opening Form
+                <br><small class="text-muted">AI-Powered Smart Assistant with Duplicate Prevention</small>
+            </h2>
+
+            <div class="ai-panel" onclick="toggleChatBody()">
+                <i class="fas fa-robot me-2"></i>
+                <strong>AI Assistant Active</strong> - Click for real-time help and suggestions!
+                <i class="fas fa-chevron-down float-end"></i>
+            </div>
+
+            <!-- Duplicate Alert Banner -->
+            <div id="duplicateAlert" class="duplicate-alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>⚠️ Duplicate Application Detected!</strong>
+                <p id="duplicateMessage" class="mb-0 mt-2"></p>
+            </div>
+
+            <form id="bankForm" method="POST" action="/success/" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <!-- Personal Information -->
+                <div class="section-title">
+                    <i class="fas fa-user me-2"></i>Personal Information
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label required-star">First Name</label>
+                        <input type="text" class="form-control" id="firstName" name="first_name" 
+                               oninput="validateAndSuggest(this, 'first_name'); checkDuplicateSubmission();" required>
+                        <div class="ai-suggestions" id="suggest-first_name"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required-star">Last Name</label>
+                        <input type="text" class="form-control" id="lastName" name="last_name"
+                               oninput="validateAndSuggest(this, 'last_name'); checkDuplicateSubmission();" required>
+                        <div class="ai-suggestions" id="suggest-last_name"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label required-star">Email Address</label>
+                    <input type="email" class="form-control" id="email" name="email"
+                           oninput="validateAndSuggest(this, 'email'); checkDuplicateSubmission();" required>
+                    <div class="ai-suggestions" id="suggest-email"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label required-star">Primary Mobile Number</label>
+                    <input type="tel" class="form-control" id="mobile" name="mobile_number"
+                           pattern="[0-9]{10}" oninput="validateAndSuggest(this, 'mobile'); validateAlternateMobile(); checkDuplicateSubmission();" required>
+                    <div class="ai-suggestions" id="suggest-mobile"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label required-star">Alternate Mobile Number</label>
+                    <input type="tel" class="form-control" id="alternate_mobile" name="alternate_mobile_number"
+                           pattern="[0-9]{10}" oninput="validateAlternateMobile(); checkDuplicateSubmission();" required>
+                    <div class="ai-suggestions" id="suggest-alternate_mobile"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label required-star">Address Line 1</label>
+                    <textarea class="form-control" id="address_line1" name="address_line1" rows="2" required></textarea>
+                    <div class="ai-suggestions" id="suggest-address"></div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label required-star">City</label>
+                        <input type="text" class="form-control" id="city" name="city" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label required-star">State</label>
+                        <input type="text" class="form-control" id="state" name="state" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label required-star">Pincode</label>
+                        <input type="text" class="form-control" id="pincode" name="pincode"
+                               pattern="[0-9]{6}" oninput="validateAndSuggest(this, 'pincode')" required>
+                        <div class="ai-suggestions" id="suggest-pincode"></div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label required-star">Account Type</label>
+                        <select class="form-select" id="accountType" name="account_type" required>
+                            <option value="">Select</option>
+                            <option>Savings</option>
+                            <option>Current</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required-star">Occupation</label>
+                        <input type="text" class="form-control" id="occupation" name="occupation" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label required-star">Income Range</label>
+                    <select class="form-select" id="incomeRange" name="income_range" required>
+                        <option value="">Select</option>
+                        <option>Below 1 Lakh</option>
+                        <option>1-5 Lakh</option>
+                        <option>Above 5 Lakh</option>
+                    </select>
+                </div>
+
+                <!-- Nominee Details -->
+                <div class="section-title mt-4">
+                    <i class="fas fa-user-friends me-2"></i>Nominee Details
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label required-star">Nominee Name</label>
+                        <input type="text" class="form-control" id="nomineeName" name="nominee_name" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required-star">Relationship</label>
+                        <input type="text" class="form-control" id="nomineeRelation" name="nomination_relation" required>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label required-star">Nominee Date of Birth</label>
+                        <input type="date" class="form-control" id="nominee_dob" name="nominee_dob" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Nominee Contact (Optional)</label>
+                        <input type="text" class="form-control" id="nomineePhone" name="nominee_contact">
+                    </div>
+                </div>
+
+                <!-- ID Proofs - Any 2 of 4 -->
+                <div class="section-title mt-4">
+                    <i class="fas fa-id-card me-2"></i>Identity Proofs
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> 
+                    <strong>Any 2 of the following 4 ID proofs are mandatory.</strong> Please select at least 2 options.
+                </div>
+
+                <!-- ID Proof 1: PAN Card -->
+                <div class="id-option-card">
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <input type="checkbox" class="id-checkbox" id="include_pan" onchange="toggleIDField('pan')">
+                            <label class="form-label fw-bold">Include PAN Card</label>
+                        </div>
+                    </div>
+                    <div id="pan_fields" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">PAN Card Number</label>
+                                <input type="text" class="form-control" id="pan_number" name="pan_number" 
+                                       placeholder="ABCDE1234F" oninput="validateAndSuggest(this, 'pan_number')">
+                                <div class="ai-suggestions" id="suggest-pan_number"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">PAN Card (PDF)</label>
+                                <input type="file" class="form-control" name="pan_card_image" accept="application/pdf" onchange="validateFile(this, 'pan')">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ID Proof 2: Aadhaar Card -->
+                <div class="id-option-card">
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <input type="checkbox" class="id-checkbox" id="include_aadhaar" onchange="toggleIDField('aadhaar')">
+                            <label class="form-label fw-bold">Include Aadhaar Card</label>
+                        </div>
+                    </div>
+                    <div id="aadhaar_fields" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Aadhaar Number</label>
+                                <input type="text" class="form-control" id="aadhaar_number" name="aadhaar_number" 
+                                       placeholder="1234 5678 9012" oninput="validateAndSuggest(this, 'aadhaar_number')">
+                                <div class="ai-suggestions" id="suggest-aadhaar_number"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Aadhaar Card (PDF)</label>
+                                <input type="file" class="form-control" name="aadhaar_front_image" accept="application/pdf" onchange="validateFile(this, 'aadhaar')">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ID Proof 3: Voter ID -->
+                <div class="id-option-card">
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <input type="checkbox" class="id-checkbox" id="include_voter" onchange="toggleIDField('voter')">
+                            <label class="form-label fw-bold">Include Voter ID</label>
+                        </div>
+                    </div>
+                    <div id="voter_fields" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Voter ID Number</label>
+                                <input type="text" class="form-control" id="voter_id" name="voter_id" 
+                                       placeholder="ABC1234567" oninput="validateAndSuggest(this, 'voter_id')">
+                                <div class="ai-suggestions" id="suggest-voter_id"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Voter ID (PDF)</label>
+                                <input type="file" class="form-control" name="voter_id_image" accept="application/pdf">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ID Proof 4: Driving License -->
+                <div class="id-option-card">
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <input type="checkbox" class="id-checkbox" id="include_dl" onchange="toggleIDField('dl')">
+                            <label class="form-label fw-bold">Include Driving License</label>
+                        </div>
+                    </div>
+                    <div id="dl_fields" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Driving License Number</label>
+                                <input type="text" class="form-control" id="driving_license" name="driving_license" 
+                                       placeholder="TN1234567890123" oninput="validateAndSuggest(this, 'driving_license')">
+                                <div class="ai-suggestions" id="suggest-driving_license"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Driving License (PDF)</label>
+                                <input type="file" class="form-control" name="driving_license_image" accept="application/pdf">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Photo & Signature -->
+                <div class="section-title mt-4">
+                    <i class="fas fa-camera me-2"></i>Photo & Signature
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label required-star">Passport Photo (JPG/PNG)</label>
+                        <input type="file" class="form-control" name="passport_photo" accept="image/jpeg,image/png,image/jpg" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required-star">Signature (JPG/PNG)</label>
+                        <input type="file" class="form-control" name="signature" accept="image/jpeg,image/png,image/jpg" required>
+                    </div>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input type="checkbox" class="form-check-input" id="agreeTerms" name="agree_terms" required>
+                    <label class="form-check-label">I agree to the Terms and Conditions</label>
+                </div>
+
+                <button type="submit" class="btn btn-submit" id="submitBtn">
+                    <i class="fas fa-paper-plane me-2"></i>Submit Application
+                </button>
+                <div id="checkingStatus" class="checking-status text-center mt-2"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Floating AI Chat Assistant -->
+    <div class="floating-ai">
+        <div class="floating-ai-header" onclick="toggleChatBody()">
+            <i class="fas fa-robot me-2"></i>AI Form Assistant
+            <i class="fas fa-comment float-end"></i>
+        </div>
+        <div class="floating-ai-body" id="chatBody">
+            <div class="ai-message success">🤖 AI Assistant Active! I will validate each field in real-time.</div>
+            <div class="ai-message success">🔍 AI will also check for duplicate submissions automatically!</div>
+            <div class="ai-message">💡 Start filling the form - I'll guide you through each field!</div>
+        </div>
+    </div>
+
+    <script>
+        let fieldValidationStatus = {};
+        let isDuplicate = false;
+        let existingApplicationId = null;
+        let duplicateCheckTimeout = null;
+
+        function addAIMessage(message, type = 'info') {
+            const chatBody = document.getElementById('chatBody');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `ai-message ${type}`;
+            msgDiv.innerHTML = `<i class="fas fa-robot me-1"></i> ${message}`;
+            chatBody.appendChild(msgDiv);
+            chatBody.scrollTop = chatBody.scrollHeight;
+            while(chatBody.children.length > 25) chatBody.removeChild(chatBody.children[0]);
+        }
+
+        // AI Duplicate Submission Check
+        async function checkDuplicateSubmission() {
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const email = document.getElementById('email').value;
+            const mobile = document.getElementById('mobile').value;
+            const alternateMobile = document.getElementById('alternate_mobile').value;
+            
+            // Only check if at least name and email or mobile are filled
+            if ((!firstName || !lastName) && !email && !mobile) {
+                return;
+            }
+            
+            const checkingStatus = document.getElementById('checkingStatus');
+            checkingStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> AI checking for duplicate submissions...';
+            
+            // Debounce to avoid too many API calls
+            clearTimeout(duplicateCheckTimeout);
+            duplicateCheckTimeout = setTimeout(async () => {
+                try {
+                    // Prepare data for duplicate check
+                    const checkData = {
+                        first_name: firstName,
+                        last_name: lastName,
+                        email: email,
+                        mobile_number: mobile,
+                        alternate_mobile_number: alternateMobile
+                    };
+                    
+                    // Make API call to check duplicates (mock API - replace with your actual endpoint)
+                    // For demo, we'll simulate checking against localStorage or session
+                    const existingApps = JSON.parse(localStorage.getItem('submittedApplications') || '[]');
+                    
+                    const duplicate = existingApps.find(app => 
+                        (app.first_name?.toLowerCase() === firstName?.toLowerCase() && 
+                         app.last_name?.toLowerCase() === lastName?.toLowerCase()) ||
+                        app.email?.toLowerCase() === email?.toLowerCase() ||
+                        app.mobile_number === mobile
+                    );
+                    
+                    if (duplicate) {
+                        isDuplicate = true;
+                        existingApplicationId = duplicate.id;
+                        const duplicateAlert = document.getElementById('duplicateAlert');
+                        const duplicateMessage = document.getElementById('duplicateMessage');
+                        
+                        duplicateAlert.style.display = 'block';
+                        duplicateMessage.innerHTML = `
+                            <strong>We found an existing application!</strong><br>
+                            Name: ${duplicate.first_name} ${duplicate.last_name}<br>
+                            Email: ${duplicate.email}<br>
+                            Mobile: ${duplicate.mobile_number}<br>
+                            Submitted on: ${new Date(duplicate.submitted_at).toLocaleString()}<br><br>
+                            Please check your details. If this is not you, please contact support.
+                        `;
+                        
+                        // Highlight duplicate fields
+                        const fieldsToHighlight = ['firstName', 'lastName', 'email', 'mobile'];
+                        fieldsToHighlight.forEach(fieldId => {
+                            const field = document.getElementById(fieldId);
+                            if (field) field.classList.add('field-duplicate');
+                        });
+                        
+                        addAIMessage(`⚠️ DUPLICATE DETECTED! An application with similar details was submitted on ${new Date(duplicate.submitted_at).toLocaleDateString()}. Please verify your information.`, 'duplicate');
+                        checkingStatus.innerHTML = '<span class="text-danger">⚠️ Duplicate application detected!</span>';
+                        
+                        // Disable submit button
+                        document.getElementById('submitBtn').disabled = true;
+                    } else {
+                        isDuplicate = false;
+                        existingApplicationId = null;
+                        document.getElementById('duplicateAlert').style.display = 'none';
+                        
+                        // Remove duplicate highlighting
+                        const fieldsToHighlight = ['firstName', 'lastName', 'email', 'mobile'];
+                        fieldsToHighlight.forEach(fieldId => {
+                            const field = document.getElementById(fieldId);
+                            if (field) field.classList.remove('field-duplicate');
+                        });
+                        
+                        checkingStatus.innerHTML = '<span class="text-success">✅ No duplicate found. You can submit.</span>';
+                        addAIMessage("✅ AI check complete: No duplicate application found. You can proceed with submission.", 'success');
+                        
+                        // Enable submit button if other validations pass
+                        document.getElementById('submitBtn').disabled = false;
+                    }
+                    
+                    setTimeout(() => {
+                        checkingStatus.innerHTML = '';
+                    }, 3000);
+                    
+                } catch (error) {
+                    console.error('Duplicate check error:', error);
+                    checkingStatus.innerHTML = '<span class="text-warning">⚠️ Unable to check duplicates. Please continue.</span>';
+                    setTimeout(() => {
+                        checkingStatus.innerHTML = '';
+                    }, 3000);
+                }
+            }, 800);
+        }
+
+        function validateAndSuggest(element, fieldName) {
+            const value = element.value;
+            const suggestionsDiv = document.getElementById(`suggest-${fieldName}`);
+            let isValid = false;
+            let suggestions = [];
+            let message = "";
+            
+            switch(fieldName) {
+                case 'first_name':
+                    isValid = /^[A-Za-z]{2,}$/.test(value);
+                    suggestions = ['Use only letters', 'Minimum 2 characters'];
+                    message = isValid ? "✅ First name looks good!" : "❌ First name should contain only letters (min 2 chars)";
+                    break;
+                case 'last_name':
+                    isValid = /^[A-Za-z]{1,}$/.test(value);
+                    suggestions = ['Use only letters', 'At least 1 character'];
+                    message = isValid ? "✅ Last name looks good!" : "❌ Last name should contain only letters";
+                    break;
+                case 'email':
+                    isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+                    suggestions = ['Must contain @ symbol', 'Valid domain like gmail.com'];
+                    message = isValid ? "✅ Email format is valid!" : "❌ Please enter a valid email address";
+                    break;
+                case 'mobile':
+                    isValid = /^\d{10}$/.test(value);
+                    suggestions = ['Exactly 10 digits', 'Numbers only'];
+                    message = isValid ? "✅ Primary mobile number is valid!" : "❌ Mobile number must be exactly 10 digits";
+                    if (isValid && document.getElementById('alternate_mobile').value) {
+                        validateAlternateMobile();
+                    }
+                    break;
+                case 'pincode':
+                    isValid = /^\d{6}$/.test(value);
+                    suggestions = ['Exactly 6 digits'];
+                    message = isValid ? "✅ Pincode is valid!" : "❌ Pincode must be 6 digits";
+                    break;
+                case 'pan_number':
+                    isValid = /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(value.toUpperCase());
+                    suggestions = ['Format: ABCDE1234F', '5 letters, 4 digits, 1 letter'];
+                    message = isValid ? "✅ PAN card format is valid!" : "❌ Invalid PAN format (should be ABCDE1234F)";
+                    if (isValid) element.value = value.toUpperCase();
+                    break;
+                case 'aadhaar_number':
+                    let clean = value.replace(/\s/g, '');
+                    isValid = /^\d{12}$/.test(clean);
+                    suggestions = ['12 digits required', 'No spaces'];
+                    message = isValid ? "✅ Aadhaar number is valid!" : "❌ Aadhaar must be 12 digits";
+                    break;
+                case 'voter_id':
+                    if (value === "") {
+                        isValid = true;
+                        message = "ℹ️ Voter ID is optional";
+                    } else {
+                        isValid = /^[A-Z]{3}[0-9]{7}$/.test(value.toUpperCase());
+                        message = isValid ? "✅ Voter ID format is valid!" : "❌ Invalid Voter ID format (ABC1234567)";
+                    }
+                    break;
+                case 'driving_license':
+                    if (value === "") {
+                        isValid = true;
+                        message = "ℹ️ Driving License is optional";
+                    } else {
+                        isValid = /^[A-Z]{2}[0-9]{13}$/.test(value.toUpperCase());
+                        message = isValid ? "✅ Driving License format is valid!" : "❌ Invalid format (TN1234567890123)";
+                    }
+                    break;
+                default:
+                    isValid = value.length > 0;
+                    message = isValid ? "✅ Field looks good!" : "❌ This field is required";
+            }
+            
+            fieldValidationStatus[fieldName] = isValid;
+            
+            if (suggestionsDiv && value.length > 0) {
+                if (!isValid) {
+                    suggestionsDiv.style.display = 'block';
+                    suggestionsDiv.innerHTML = `<i class="fas fa-lightbulb text-warning"></i> <strong>AI Suggestion:</strong><br>${suggestions.map(s => `• ${s}`).join('<br>')}`;
+                    element.classList.add('field-invalid');
+                    element.classList.remove('field-valid');
+                    if (message.includes('❌')) addAIMessage(message, 'error');
+                } else if (isValid && value.length > 0) {
+                    suggestionsDiv.style.display = 'none';
+                    element.classList.add('field-valid');
+                    element.classList.remove('field-invalid');
+                    if (message.includes('✅') || message.includes('ℹ️')) addAIMessage(message, 'success');
+                }
+            } else if (value.length === 0 && suggestionsDiv) {
+                suggestionsDiv.style.display = 'none';
+            }
+        }
+
+        function validateAlternateMobile() {
+            const primaryMobile = document.getElementById('mobile').value;
+            const alternateMobile = document.getElementById('alternate_mobile').value;
+            const suggestionsDiv = document.getElementById('suggest-alternate_mobile');
+            const element = document.getElementById('alternate_mobile');
+            
+            if (!alternateMobile) {
+                addAIMessage("❌ Alternate mobile number is required!", 'error');
+                element.classList.add('field-invalid');
+                return false;
+            }
+            
+            if (!/^\d{10}$/.test(alternateMobile)) {
+                if (suggestionsDiv) {
+                    suggestionsDiv.style.display = 'block';
+                    suggestionsDiv.innerHTML = `<i class="fas fa-lightbulb text-warning"></i> <strong>AI Suggestion:</strong><br>• Exactly 10 digits<br>• Numbers only`;
+                }
+                element.classList.add('field-invalid');
+                addAIMessage("❌ Alternate mobile must be exactly 10 digits", 'error');
+                return false;
+            }
+            
+            if (primaryMobile === alternateMobile) {
+                if (suggestionsDiv) {
+                    suggestionsDiv.style.display = 'block';
+                    suggestionsDiv.innerHTML = `<i class="fas fa-lightbulb text-warning"></i> <strong>AI Suggestion:</strong><br>• Alternate mobile must be different from primary mobile`;
+                }
+                element.classList.add('field-invalid');
+                addAIMessage("❌ Alternate mobile number must be different from primary mobile number!", 'error');
+                return false;
+            }
+            
+            suggestionsDiv.style.display = 'none';
+            element.classList.add('field-valid');
+            element.classList.remove('field-invalid');
+            addAIMessage("✅ Both mobile numbers are valid and different!", 'success');
+            return true;
+        }
+
+        function validateFile(element, type) {
+            if (element.files.length > 0) {
+                const file = element.files[0];
+                if (file.type !== 'application/pdf') {
+                    addAIMessage(`❌ ${type.toUpperCase()} Card must be a PDF file!`, 'error');
+                    element.value = '';
+                    return false;
+                }
+                addAIMessage(`✅ ${type.toUpperCase()} Card PDF uploaded successfully!`, 'success');
+                return true;
+            }
+            return false;
+        }
+
+        function toggleIDField(type) {
+            const checkbox = document.getElementById(`include_${type}`);
+            const fields = document.getElementById(`${type}_fields`);
+            fields.style.display = checkbox.checked ? 'block' : 'none';
+            
+            if (checkbox.checked) {
+                addAIMessage(`📋 ${getIDTypeName(type)} selected. Please enter details and upload PDF.`, 'info');
+            } else {
+                addAIMessage(`⚠️ ${getIDTypeName(type)} deselected. Make sure you have at least 2 ID proofs.`, 'warning');
+            }
+            updateIDCount();
+        }
+
+        function getIDTypeName(type) {
+            const names = { pan: 'PAN Card', aadhaar: 'Aadhaar Card', voter: 'Voter ID', dl: 'Driving License' };
+            return names[type];
+        }
+
+        function updateIDCount() {
+            const checkboxes = ['include_pan', 'include_aadhaar', 'include_voter', 'include_dl'];
+            let count = 0;
+            checkboxes.forEach(id => {
+                if (document.getElementById(id).checked) count++;
+            });
+            
+            if (count < 2) {
+                addAIMessage(`⚠️ Please select ${2 - count} more ID proof(s). Minimum 2 required.`, 'warning');
+            } else if (count === 2) {
+                addAIMessage(`✅ You have selected ${count} ID proof(s). Good to go!`, 'success');
+            } else {
+                addAIMessage(`✅ You have selected ${count} ID proof(s). ${count - 2} extra for verification.`, 'success');
+            }
+        }
+
+        function validateAllFields() {
+            let allValid = true;
+            const requiredTextFields = ['firstName', 'lastName', 'email', 'mobile', 'alternate_mobile', 'address_line1', 'city', 'state', 'pincode', 'accountType', 'occupation', 'incomeRange', 'nomineeName', 'nomineeRelation', 'nominee_dob'];
+            
+            for (let fieldId of requiredTextFields) {
+                const field = document.getElementById(fieldId);
+                if (!field.value) {
+                    allValid = false;
+                    addAIMessage(`❌ Please fill ${fieldId.replace(/_/g, ' ')}`, 'error');
+                }
+            }
+            
+            // Check alternate mobile different from primary
+            if (document.getElementById('mobile').value === document.getElementById('alternate_mobile').value) {
+                allValid = false;
+                addAIMessage("❌ Alternate mobile must be different from primary mobile", 'error');
+            }
+            
+            // Check ID proofs count
+            const selectedIDs = [];
+            if (document.getElementById('include_pan')?.checked) selectedIDs.push('PAN');
+            if (document.getElementById('include_aadhaar')?.checked) selectedIDs.push('Aadhaar');
+            if (document.getElementById('include_voter')?.checked) selectedIDs.push('Voter ID');
+            if (document.getElementById('include_dl')?.checked) selectedIDs.push('Driving License');
+            
+            if (selectedIDs.length < 2) {
+                allValid = false;
+                addAIMessage(`❌ Please select at least 2 ID proofs (currently: ${selectedIDs.length})`, 'error');
+            }
+            
+            // Check for duplicates
+            if (isDuplicate) {
+                allValid = false;
+                addAIMessage("❌ Duplicate application detected! Please check your details.", 'error');
+            }
+            
+            return allValid;
+        }
+
+        // Form submission with duplicate prevention
+        document.getElementById('bankForm').addEventListener('submit', function(e) {
+            if (isDuplicate) {
+                e.preventDefault();
+                addAIMessage("❌ Cannot submit duplicate application! Please contact support if this is an error.", 'error');
+                return;
+            }
+            
+            if (!validateAllFields()) {
+                e.preventDefault();
+                addAIMessage("❌ Please fix all errors before submitting!", 'error');
+            } else {
+                // Store submission in localStorage for duplicate checking
+                const formData = {
+                    id: Date.now(),
+                    first_name: document.getElementById('firstName').value,
+                    last_name: document.getElementById('lastName').value,
+                    email: document.getElementById('email').value,
+                    mobile_number: document.getElementById('mobile').value,
+                    alternate_mobile_number: document.getElementById('alternate_mobile').value,
+                    submitted_at: new Date().toISOString()
+                };
+                
+                const existingApps = JSON.parse(localStorage.getItem('submittedApplications') || '[]');
+                existingApps.push(formData);
+                localStorage.setItem('submittedApplications', JSON.stringify(existingApps));
+                
+                addAIMessage("✅ All fields validated! Submitting your application...", 'success');
+            }
+        });
+
+        function toggleChatBody() {
+            const chatBody = document.getElementById('chatBody');
+            chatBody.style.display = chatBody.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Add event listeners for all inputs to show focus messages
+        document.querySelectorAll('input, select, textarea').forEach(field => {
+            field.addEventListener('focus', () => {
+                if (field.id && field.id !== 'agreeTerms' && field.type !== 'file') {
+                    const fieldName = field.id.replace(/_/g, ' ');
+                    addAIMessage(`✏️ Now filling: ${fieldName}`, 'info');
+                }
+            });
+        });
+
+        // Initial AI welcome message
+        setTimeout(() => {
+            addAIMessage("🎯 Welcome! I'll validate each field as you type.", 'success');
+            addAIMessage("🔍 AI will automatically check for duplicate submissions!", 'success');
+            addAIMessage("📌 Note: Primary and Alternate mobile numbers must be different!", 'warning');
+            addAIMessage("🆔 Select any 2 ID proofs from the 4 options below.", 'info');
+        }, 500);
+    </script>
+</body>
+</html>
